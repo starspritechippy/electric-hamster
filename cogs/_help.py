@@ -1,88 +1,115 @@
-import traceback
-import sys
+from utils import pagenator
 from discord.ext import commands
 import discord
-import asyncio
+import random
 
 
-class _help:
+class _help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context=True)
-    async def help(ctx, page=1):
-        page_one = discord.Embed(description=f"Hey, I'm electric Hamster!", color=0xFFFFFF)
-        page_one.add_field(name="Page 2 - Meta commands:",      value=".changelog\n.server\n.invite\n.ping", inline=True)
-        page_one.add_field(name="Page 3 - Regular commands:",   value=".poll\n.embed", inline=True)
-        page_one.add_field(name="Page 4 - Fun commands:",       value=".dice\n.rps\n.repeat", inline=True)
-        page_one.add_field(name="Page 5 - Modertion commands:", value=".kick\n.ban\n.prune\n.delete", inline=True)
-        page_one.set_footer(text="You're on page 1")
+    async def category_gen(self, ctx):
+        categories = {}
 
-        page_two = discord.Embed(title="", description="__Meta commands__", color=0x000000)                   
-        page_two.add_field(name=".changelog", value="Shows the most recent changes to the bot.\nUsage: `.changelog`", inline=False)
-        page_two.add_field(name=".server",    value="Invites you to my support/testing server.\nUsage: `.server`\nAliases: `support`", inline=False)
-        page_two.add_field(name=".invite",    value="Gives you a link to invite me to your own server.\nUsage: `.invite`", inline=False)
-        page_two.add_field(name=".ping",      value="", inline=False)
-        page_two.set_footer(text="You're on page 2")
+        for command in set(self.bot.walk_commands()):
+            try:
+                if command.category not in categories:
+                    categories.update({command.category: []})
+            except AttributeError:
+                cog = command.cog_name or "Bot"
+                if command.cog_name not in categories:
+                    categories.update({cog: []})
 
-        page_three = discord.Embed(title="", description="__Regular commands__", color=0x000000)
-        page_three.add_field(name=".embed", value='Allows you to create a rich embed that displays your message more beautifully.\nUsage: `.embed "title" "description"` (the quotation marks are necessary)', inline=False)
-        page_three.add_field(name=".poll",  value="Creates a rich embed with the option to vote *yes, no* or *undecided*.\nUsage: `.poll \"title\" \"description\"` (the quotation marks are necessary)", inline=False)
-        page_three.set_footer(text="You're on page 3")
+        for command in set(ctx.bot.walk_commands()):
+            if not command.hidden:
+                try:
+                    if command.category:
+                        categories[command.category].append(command)
+                except AttributeError:
+                    cog = command.cog_name or "Bot"
+                    categories[cog].append(command)
 
-        page_four = discord.Embed(title="", description="__Fun commands__", color=0x000000)
-        page_four.add_field(name=".dice",   value="Roll a dice!\nUsage: `.dice [sides=6]`, so `.dice 12` rolls a twelve-sided dice.\nAliases: `die / roll`", inline=False)
-        page_four.add_field(name=".rps",    value="Play a round of rock-paper-scissors against me :smile:\nUsage:`.rps`\nAliases: `rockpaperscissors / psr / paperscissorsrock`", inline=False)
-        page_four.add_field(name=".repeat", value="Repeats something you want the bot to say. Can be used for epic bamboozles.\nUsage: `.repeat any text`\nAliases: `echo / say`", inline=False)
-        page_four.set_footer(text="You're on page 4")
+        return categories
 
-        page_five = discord.Embed(title="these can only be used with certain permissions", description="__Moderation commands__", color=0x000000)
-        page_five.add_field(name=".kick",   value="Kicks the specified user from the server\nUsage: `.kick @user`\nPermissions needed: `kick_members`", inline=False)
-        page_five.add_field(name=".ban",    value="Bans the specified user from the server\nUsage: `.ban @user`\nPermissions needed: `ban_members`", inline=False)
-        page_five.add_field(name=".prune",  value="Prunes inactive members from the server. [What is pruning?](https://support.discordapp.com/hc/en-us/articles/213507137-What-is-Pruning-How-do-I-use-it-)\nUsage: `.prune [days=30]`\n`days` is the amount of days a user has to be inactive to get pruned.\nPermission needed: `kick_members`", inline=False)
-        page_five.add_field(name=".delete", value="Deletes the last messages from the active channel.\nUsage: `.delete [amount=99]`\nYou can't delete more that 100 or less than 2 messages.\nPermissions needed: `manage_messages`", inline=False)
-        page_five.set_footer(text="You're on page 5")
+    async def commandMapper(self, ctx):
+        pages = []
 
-        if page == 1:
-            helping = page_one
-        elif page == 2:
-            helping = page_two
-        elif page == 3:
-            helping = page_three
-        elif page == 4:
-            helping = page_four
-        elif page == 5:
-            helping = page_five
+        for category, commands in (await self.category_gen(ctx)).items():
+            if not commands:
+                continue
+            cog = ctx.bot.get_cog(category)
+            if cog:
+                category = f"**⚙️ {category}**"
+            commands = ", ".join([c.qualified_name for c in commands])
+            embed = (
+                discord.Embed(
+                    color=random.randint(0x000000, 0xFFFFFF),
+                    title=f"{ctx.bot.user.display_name} Commands",
+                    description=f"{category}",
+                )
+                .set_footer(
+                    text=f"Type {ctx.prefix}help <command> for more help".replace(
+                        ctx.me.mention, "@Pawbot "
+                    ),
+                    icon_url=ctx.author.avatar_url,
+                )
+                .add_field(name="**Commands:**", value=f"``{commands}``")
+            )
+            pages.append(embed)
+        await pagenator.SimplePaginator(
+            extras=sorted(pages, key=lambda d: d.description)
+        ).paginate(ctx)
 
-        m = await bot.say(ctx.message.channel, embed=helping)
+    async def cogMapper(self, ctx, entity, cogname: str):
+        try:
+            await ctx.send(
+                embed=discord.Embed(
+                    color=random.randint(0x000000, 0xFFFFFF),
+                    title=f"{ctx.bot.user.display_name} Commands",
+                    description=f"**⚙️ {cogname}**",
+                )
+                .add_field(
+                    name="**Commands:**",
+                    value=f"``{', '.join([c.qualified_name for c in set(ctx.bot.walk_commands()) if c.cog_name == cogname])}``",
+                )
+                .set_footer(
+                    text=f"Type {ctx.prefix}help <command> for more help".replace(
+                        ctx.me.mention, "@Pawbot "
+                    ),
+                    icon_url=ctx.author.avatar_url,
+                )
+            )
+        except BaseException:
+            await ctx.send(
+                f":x: | **Command or category not found. Use {ctx.prefix}help**",
+                delete_after=10,
+            )
 
-        check = 1==1
-        while check == True:
-            await bot.add_reaction(message=m, emoji="1⃣")
-            await bot.add_reaction(message=m, emoji="2⃣")
-            await bot.add_reaction(message=m, emoji="3⃣")
-            await bot.add_reaction(message=m, emoji="4⃣")
-            await bot.add_reaction(message=m, emoji="5⃣")
-                           
-            react = await bot.wait_for_reaction(emoji=["1⃣", "2⃣", "3⃣", "4⃣", "5⃣"], user=ctx.message.author, timeout=20, message=m)
-            if "{0.reaction.emoji}".format(react) == "1⃣":
-                await bot.delete_message(m)
-                m = await bot.say(embed=page_one)
-            elif "{0.reaction.emoji}".format(react) == "2⃣":
-                await bot.delete_message(m)
-                m = await bot.say(embed=page_two)
-            elif "{0.reaction.emoji}".format(react) == "3⃣":
-                await bot.delete_message(m)
-                m = await bot.say(embed=page_three)
-            elif "{0.reaction.emoji}".format(react) == "4⃣":
-                await bot.delete_message(m)
-                m = await bot.say(embed=page_four)
-            elif "{0.reaction.emoji}".format(react) == "5⃣":
-                await bot.delete_message(m)
-                m = await bot.say(embed=page_five)
+    @commands.command(aliases=["?"], hidden=True)
+    async def help(self, ctx, *, command: str = None):
+        """View Bot Help Menu"""
+        if not command:
+            await self.commandMapper(ctx)
+        else:
+            entity = self.bot.get_cog(command) or self.bot.get_command(command)
+            if entity is None:
+                return await ctx.send(
+                    f":x: | **Command or category not found. Use {ctx.prefix}help**",
+                    delete_after=10,
+                )
+            if isinstance(entity, commands.Command):
+                await pagenator.SimplePaginator(
+                    title=f"Command: {entity.name}",
+                    entries=[
+                        f"**:bulb: Command Help**\n```ini\n[{entity.help}]```",
+                        f"**:video_game: Command Signature**\n```ini\n{entity.signature}```",
+                    ],
+                    length=1,
+                    colour=random.randint(0x000000, 0xFFFFFF),
+                ).paginate(ctx)
             else:
-                pass
+                await self.cogMapper(ctx, entity, command)
+
 
 def setup(bot):
     bot.add_cog(_help(bot))
-        
