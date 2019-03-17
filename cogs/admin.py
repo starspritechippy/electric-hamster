@@ -1,8 +1,10 @@
 import io
 import textwrap
 import traceback
+import shlex
+import os
+from subprocess import Popen, PIPE
 from contextlib import redirect_stdout
-
 from discord.ext import commands
 
 
@@ -18,57 +20,11 @@ class admin(commands.Cog):
         if content.startswith('```') and content.endswith('```'):
             return '\n'.join(content.split('\n')[1:-1])
 
+    def run_shell(command):
+        with Popen(command, stdout=PIPE, stderr=PIPE, shell=True) as proc:
+            return [std.decode("utf-8") for std in proc.communicate()]
 
-    @commands.command(pass_context=True, hidden=True, name='eval')
-    async def _eval(self, ctx, *, body = ''):
-        if ctx.author.id not in self.admins:
-            return
-        env = {
-            'bot': self.bot,
-            'ctx': ctx,
-            'channel': ctx.message.channel,
-            'author': ctx.message.author,
-            'server': ctx.message.guild,
-            'message': ctx.message,
-            '_': self._last_result
-        }
-
-        env.update(globals())
-
-        body = self.cleanup_code(body)
-        stdout = io.StringIO()
-
-        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
-
-        try:
-            exec(to_compile, env)
-        except Exception as e:
-            return await self.bot.say(f'```py\n{e.__class__.__name__}: {e}\n```')
-
-        func = env['func']
-        try:
-            with redirect_stdout(stdout):
-                ret = await func()
-        except Exception as e:
-            value = stdout.getvalue()
-            await self.bot.say(f'```py\n{value}{traceback.format_exc()}\n```')
-        else:
-            value = stdout.getvalue()
-            try:
-                await ctx.message.add_reaction('\u2705')
-            except:
-                pass
-
-            if ret is None:
-                if value:
-                    await self.bot.say(f'```py\n{value}\n```')
-            else:
-                self._last_result = ret
-                await self.bot.say(f'```py\n{value}{ret}\n```')
-
-
-
-    @commands.command(pass_context=True)
+    @commands.command(hidden=True)
     async def load(self, ctx, extension_name: str):
         """Loads an extension."""
         if ctx.author.id not in self.admins:
@@ -81,13 +37,47 @@ class admin(commands.Cog):
         await bot.say("cog **{}** successfully loaded.".format(extension_name))
 
 
-    @commands.command(pass_context=True)
+    @commands.command(hidden=True)
     async def unload(self, ctx, extension_name: str):
         """Unloads an extension."""
         if ctx.author.id not in self.admins:
             return
         bot.unload_extension(extension_name)
         await bot.say("cog **{}** successfully unloaded.".format(extension_name))
+
+
+    @commands.command(hidden=True)
+    async def reboot(self, ctx):
+        """ Reboot the bot """
+        if ctx.author.id not in self.admins:
+            return
+        await ctx.send("Rebooting now...")
+        time.sleep(1)
+        await self.bot.logout()
+
+
+    @commands.command(hidden=True, aliases=["pull"])
+    async def update(self, ctx, silently: bool = False):
+        """ Gets latest commits and applies them from git """
+        if ctx.author.id not in self.admins:
+            return
+        await ctx.message.add_reaction("a:loading:528744937794043934")
+
+        def run_shell(command):
+            with Popen(command, stdout=PIPE, stderr=PIPE, shell=True) as proc:
+                return [std.decode("utf-8") for std in proc.communicate()]
+
+        pull = await self.bot.loop.run_in_executor(
+            None, run_shell, "git pull origin master"
+        )
+        msg = await ctx.send(f"```css\n{pull}\n```", delete_after=6)
+        await ctx.message.remove_reaction("a:loading:528744937794043934", member=ctx.me)
+        for file in os.listdir("cogs"):
+            if file.endswith(".py"):
+                name = file[:-3]
+                self.bot.unload_extension(f"cogs.{name}")
+                self.bot.load_extension(f"cogs.{name}")
+        await ctx.message.add_reaction(":done:513831607262511124")
 
 
 def setup(bot):
