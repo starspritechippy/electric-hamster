@@ -3,6 +3,7 @@ import textwrap
 import traceback
 import shlex
 import os
+import time
 from subprocess import Popen, PIPE
 from contextlib import redirect_stdout
 from discord.ext import commands
