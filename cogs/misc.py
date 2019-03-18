@@ -15,11 +15,11 @@ class misc(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, description="Using this command will mark you as AFK and any users who ping you while AFK will get notified of that.")
     async def afk(self, ctx, *, message: str):
         query = "INSERT INTO afk VALUES ($1, $2);"
         await self.bot.db.execute(query, ctx.author.id, message)
-        await ctx.send("Set you as AFK! I'll notify users who ping you.")
+        await ctx.send("You are now AFK! I'll notify users when they ping you.")
 
 
     @commands.command(aliases=["server"])
