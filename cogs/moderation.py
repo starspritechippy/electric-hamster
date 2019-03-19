@@ -44,7 +44,7 @@ class moderation(commands.Cog):
 
     @commands.has_permissions(kick_members=True)
     @commands.group(pass_context=True, invoke_without_command=True)
-    async def prune(self, ctx, time=30):
+    async def prune(self, ctx):
         if ctx.message.author.bot:
             return
         guild = ctx.guild
@@ -52,9 +52,10 @@ class moderation(commands.Cog):
         est_msg = await ctx.send(f"This will get rid of an estimated **{est}** people. Are you sure you want to prune?\ntype `.prune confirm` to confirm.")
         
     @commands.has_permission(kick_members=True)    
-    @prune.command(pass_context=True)     
-        number = await guild.prune_members(days=time)
-        await ctx.send(f"That should have gotten rid of **{number}** inactive users. Check the audit log and contact Chippy#7628 or Paws#0001 if something went wrong.")
+    @prune.command(pass_context=True)
+    asnyc def confirm(self, ctx)
+    number = await guild.prune_members(days=30)
+    await ctx.send(f"That should have gotten rid of **{number}** inactive users. Check the audit log and contact Chippy#7628 or Paws#0001 if something went wrong.")
 
 
 def setup(bot):
