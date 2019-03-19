@@ -53,7 +53,7 @@ class moderation(commands.Cog):
         
     @commands.has_permission(kick_members=True)    
     @prune.command(pass_context=True)
-    asnyc def confirm(self, ctx)
+    async def confirm(self, ctx)
     number = await guild.prune_members(days=30)
     await ctx.send(f"That should have gotten rid of **{number}** inactive users. Check the audit log and contact Chippy#7628 or Paws#0001 if something went wrong.")
 
