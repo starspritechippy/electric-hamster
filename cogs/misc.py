@@ -77,7 +77,7 @@ class misc(commands.Cog):
     async def feedback(self, ctx):
         if ctx.message.author.bot:
             return
-        dm = bot.get_channel("548151074369044488")
+        dm = bot.get_channel(548151074369044488)
         args = ctx.message.content.split(" ")
         feedback_embed = discord.Embed(title="New feedback/request!", color=0x00FFFF)
         feedback_embed.add_field(
@@ -89,13 +89,11 @@ class misc(commands.Cog):
             value=" ".join(args[1:]),
             inline=False,
         )
-        await bot.send_message(
-            destination=dm,
-            content="<@262133866062413825> / <#{}>".format(ctx.message.channel.id),
+        await dm.send(
+            content=f"<@262133866062413825> / <#{ctx.message.channel.id}>",
             embed=feedback_embed,
         )
-        await bot.send_message(
-            ctx.message.channel,
+        await ctx.send(
             "feedback/request was sent, my creator will take a look at it ASAP.",
         )
 
