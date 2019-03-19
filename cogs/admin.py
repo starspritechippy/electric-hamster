@@ -31,11 +31,11 @@ class admin(commands.Cog):
         if ctx.author.id not in self.admins:
             return
         try:
-            bot.load_extension(extension_name)
+            bot.load_extension(f"cogs.{extension_name}")
         except (AttributeError, ImportError) as e:
-            await bot.say("```py\n{}: {}\n```".format(type(e).__name__, str(e)))
+            await ctx.send("```py\n{}: {}\n```".format(type(e).__name__, str(e)))
             return
-        await bot.say("cog **{}** successfully loaded.".format(extension_name))
+        await ctx.send("cog **{}** successfully loaded.".format(extension_name))
 
 
     @commands.command(hidden=True)
@@ -43,8 +43,8 @@ class admin(commands.Cog):
         """Unloads an extension."""
         if ctx.author.id not in self.admins:
             return
-        bot.unload_extension(extension_name)
-        await bot.say("cog **{}** successfully unloaded.".format(extension_name))
+        bot.unload_extension(f"cogs.{extension_name}")
+        await ctx.send("cog **{}** successfully unloaded.".format(extension_name))
 
 
     @commands.command(hidden=True)
@@ -61,6 +61,7 @@ class admin(commands.Cog):
     async def update(self, ctx, silently: bool = False):
         """ Gets latest commits and applies them from git """
         if ctx.author.id not in self.admins:
+            ctx.send("You can't do that, this command is only for bot admins")
             return
         await ctx.message.add_reaction("a:loading:528744937794043934")
 
