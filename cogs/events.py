@@ -28,6 +28,7 @@ class events(commands.Cog):
 
         elif isinstance(err, errors.CommandInvokeError):
             err = err.original
+            logging = get_channel(557461418652336129)
 
             _traceback = traceback.format_tb(err.__traceback__)
             _traceback = "".join(_traceback)
@@ -35,6 +36,7 @@ class events(commands.Cog):
                 type(err).__name__, ctx.message.content, _traceback, err
             )
             print(error)
+            logging.send(error)
 
         elif isinstance(err, errors.CheckFailure):
             pass
