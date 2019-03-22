@@ -8,7 +8,6 @@ from utils import default
 config = default.get("config.json")
 
 
-
 async def run():
     help_attrs = dict(hidden=True)
     credentials = {
@@ -19,9 +18,7 @@ async def run():
     }
     db = await asyncpg.create_pool(**credentials)
 
-    await db.execute(
-        "CREATE TABLE IF NOT EXISTS afk(userid bigint, reason varchar);"
-    )
+    await db.execute("CREATE TABLE IF NOT EXISTS afk(userid bigint, reason varchar);")
 
     bot = Bot(command_prefix=config.prefix, pm_help=True, help_attrs=help_attrs, db=db)
     bot.remove_command("help")
