@@ -51,7 +51,7 @@ class moderation(commands.Cog):
         est = await guild.estimate_pruned_members(days=30)
         est_msg = await ctx.send(f"This will get rid of an estimated **{est}** people. Are you sure you want to prune?\ntype `.prune confirm` to confirm.")
         
-    @commands.has_permission(kick_members=True)    
+    @commands.has_permissions(kick_members=True)    
     @prune.command(pass_context=True)
     async def confirm(self, ctx):
         number = await guild.prune_members(days=30)
