@@ -36,25 +36,25 @@ class moderation(commands.Cog):
             await ctx.send("cannot delete less than 0 or more than 100 messages", delete_after=4)
             return
         try:     
-            await ctx.channel.purge(limit=amount)
+            await ctx.channel.purge(limit=amount+1)
         except:
             await ctx.send(f"`{amount}` isn't a number", delete_after=4)
             return
-        await ctx.send("Yup, deleted a whopping **{}** messages for ya!".format(amount))
+        await ctx.send(f"Yup, deleted a whopping **{amount}** messages for ya!", delete_after=4)
 
     @commands.has_permissions(kick_members=True)
     @commands.group(pass_context=True, invoke_without_command=True)
-    async def prune(self, ctx):
+    async def prune(self, ctx, time=30):
         if ctx.message.author.bot:
             return
         guild = ctx.guild
-        est = await guild.estimate_pruned_members(days=30)
-        est_msg = await ctx.send(f"This will get rid of an estimated **{est}** people. Are you sure you want to prune?\ntype `.prune confirm` to confirm.")
+        est = await guild.estimate_pruned_members(days=time)
+        est_msg = await ctx.send(f"This will get rid of an estimated **{est}** people. Are you sure you want to prune?\ntype `.prune confirm {time}` to confirm.")
         
     @commands.has_permissions(kick_members=True)    
     @prune.command(pass_context=True)
-    async def confirm(self, ctx):
-        number = await guild.prune_members(days=30)
+    async def confirm(self, ctx, time):
+        number = await guild.prune_members(days=time)
         await ctx.send(f"That should have gotten rid of **{number}** inactive users. Check the audit log and contact Chippy#7628 or Paws#0001 if something went wrong.")
 
 
