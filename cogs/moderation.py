@@ -12,7 +12,7 @@ class moderation(commands.Cog):
     @commands.has_permissions(kick_members=True)
     @commands.command(pass_context=True)
     async def kick(self, ctx, user: discord.Member, *, reason: str):
-        await ctx.send(f"<@{user.id}> you will be kicked in 15 seconds. Any last words?")
+        await ctx.send(f"{user.mention} you will be kicked in 15 seconds. Any last words?")
         await asyncio.sleep(15)
         await user.send(f"You've been kicked from {ctx.guild.name}. Reason: {reason}")
         await user.kick()
@@ -21,7 +21,7 @@ class moderation(commands.Cog):
     @commands.has_permissions(ban_members=True)
     @commands.command(pass_context=True)
     async def ban(self, ctx, user: discord.Member):
-        await ctx.send(f"<@{user.id}> you will be banned in 15 seconds. Any last words?")
+        await ctx.send(f"{user.mention} you will be banned in 15 seconds. Any last words?")
         await asyncio.sleep(15)
         await user.send(f"You've been banned from {ctx.guild.name}. Reason: {reason}")
         await user.ban()
@@ -29,7 +29,7 @@ class moderation(commands.Cog):
     
     @commands.has_permissions(manage_messages=True)
     @commands.command(pass_context=True, aliases=["delete","clean","clear"])
-    async def delet(self, ctx, amount: int):
+    async def delet(self, ctx, amount=20):
         if ctx.message.author.bot:
             return
         if amount <= 0 or amount >= 100:
