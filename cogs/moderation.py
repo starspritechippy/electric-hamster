@@ -36,7 +36,7 @@ class moderation(commands.Cog):
             await ctx.send("cannot delete less than 0 or more than 100 messages", delete_after=4)
             return
         try:     
-            await ctx.purge(limit=amount)
+            await ctx.channel.purge(limit=amount)
         except:
             await ctx.send(f"`{amount}` isn't a number", delete_after=4)
             return
