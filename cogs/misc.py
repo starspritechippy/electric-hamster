@@ -175,7 +175,7 @@ class misc(commands.Cog):
 
 
     ###furry cmd###
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, hidden=True)
     async def fursona(self, ctx):
         if ctx.message.author.bot:
             return
