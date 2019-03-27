@@ -28,7 +28,7 @@ class events(commands.Cog):
 
         elif isinstance(err, errors.CommandInvokeError):
             err = err.original
-            logging = get_channel(557461418652336129)
+            logging = self.bot.get_channel(557461418652336129)
 
             _traceback = traceback.format_tb(err.__traceback__)
             _traceback = "".join(_traceback)
