@@ -36,7 +36,7 @@ class events(commands.Cog):
                 type(err).__name__, ctx.message.content, _traceback, err
             )
             print(error)
-            ctx.send(error)
+            await logging.send(error)
 
         elif isinstance(err, errors.CheckFailure):
             pass
